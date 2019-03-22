@@ -1,0 +1,5 @@
+- hosts: all
+  gather_facts: Flase
+  tasks:
+  - name : display host variables
+    debug: msg="The {{ inventory_hostname }} vaule is {{ key }}"

@@ -1,0 +1,9 @@
+- hosts: test2
+  gather_facts: False
+  tasks:
+  - name: debug loops
+    yum: name={{ item }} state=latest
+    with_items:
+      - pcre
+      - pcre-devel
+      - nginx

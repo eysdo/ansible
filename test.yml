@@ -1,0 +1,12 @@
+- name: test
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: yum wget
+      yum: pkg=wget state=latest
+    - name: mv old repo
+      shell: mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+    - name: download repo
+      shell:  wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-6.repo
+    - name: get status
+      shell: netstat -tnlup

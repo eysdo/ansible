@@ -1,0 +1,41 @@
+- name: deploy tomcat war   
+  hosts: webServers1  
+  vars_files:  
+  - /etc/ansible/roles/warDeploy/webServers1/vars/vars.yml  
+  tasks:  
+  - name: backup old war    
+    shell: cp {{ warRemotePath }}/{{ warName }} {{ warRemotePath }}/{{ warName }}$(date +"%Y%m%d%H%M%S")  
+    ignore_errors: True
+  - name: shutdown tomcat  
+    shell: chdir={{ tomcatHome }}/bin ./shutdown.sh && sleep 3
+    ignore_errors: True
+  - name: tomcat down status  
+    shell: curl -I {{ serverAddress }} &>/dev/null && echo NO || echo YES  
+    ignore_errors: True  
+    register: isDown
+  - name : Get running processes
+    shell: "ps -ef | grep -v grep | grep -w {{ tomcatHome }} | awk '{print $2}'" 
+    register: processId
+    when: isDown.stdout == "NO" 
+  - name: Force kill stuck processes 
+    shell: "kill -9 {{ item }}"
+    with_items: "{{ processId.stdout_lines }}"
+    when: processId.stdout != ""
+  - name: del old war
+    file: path={{ warRemotePath }}/{{ warName }} state=absent force=yes
+    when: isDown.stdout == "YES"  
+  - name: del old dir
+    file: path={{ warRemotePath }}/{{ warDir }} state=absent force=yes
+    when: isDown.stdout == "YES"  
+  - name: copy war to server  
+    copy: src={{ warLocalPath }}/{{ warName }} dest={{ warRemotePath }}/{{ warName }} mode=0644 owner=root group=root force=yes  
+  - name: start tomcat
+    shell: chdir={{ tomcatHome }}/bin nohup ./startup.sh &
+  - name: sleep 40s
+    shell: sleep 40  
+  - name: tomcat up status
+    shell: curl -I {{ serverAddress }} &>/dev/null && echo YES || echo NO  
+    ignore_errors: True  
+    register: isUp
+  - name: show debug info
+    debug: var=isUp verbosity=0

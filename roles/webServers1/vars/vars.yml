@@ -1,0 +1,8 @@
+serverPort: 8060
+stopPort: 8005
+tomcatHome: /opt/tomcat_session-8060 
+warName: SessionServer-orange.war  
+warDir: SessionServer-orange
+warLocalPath: /etc/ansible/roles/webServers1/files  
+warRemotePath: "{{ tomcatHome }}/webapps"
+downloadUrl: http://111.111.111.111/src

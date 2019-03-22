@@ -1,0 +1,9 @@
+- include: rollback.yml
+  tags:
+    - rollback
+- include: restart.yml
+  tags:
+    - restart
+- include: deploy.yml
+  tags:
+    - deploy

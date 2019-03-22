@@ -1,0 +1,25 @@
+- name: shutdown tomcat
+  shell: chdir={{ tomcatHome }}/bin ./shutdown.sh
+- name: waiting for tomcat stop...
+  wait_for: host={{ inventory_hostname }} port={{ serverPort }} delay=3 state=stopped timeout=10
+  register: Isdown
+- name: tomcat pid
+  shell: "ps -ef | grep -v grep | grep -w {{ tomcatHome }} | awk '{print $2}'"
+  when: "'state' in Isdown and Isdown.state != 'stopped'"
+  register: processId
+- name: force kill tomcat
+  command: "kill -9 {{ processId.stdout_lines }}"
+  when: "'state' in Isdown and Isdown.state != 'stopped'"
+- name: pause 3s
+  pause: seconds=3
+- name: war rename
+  command: "mv -f {{ warRemotePath }}/{{ warName }}.bak {{ warRemotePath }}/{{ warName }}"
+- name: del war dir
+  file: path={{ warRemotePath }}/{{ warDir }} state=absent force=yes
+- name: start tomcat
+  shell: chdir={{ tomcatHome }}/bin nohup ./startup.sh &
+- name: waiting for tomcat startup...
+  wait_for: host={{ inventory_hostname }} port={{ serverPort }} delay=30
+- name: tomcat startup finished!
+  command: echo "start SUCCESSFULL!!!"
+
